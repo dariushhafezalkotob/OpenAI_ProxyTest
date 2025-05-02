@@ -31,7 +31,7 @@ async def chat(request: Request):
         }
 
         data = {
-            "model": "maverick/llama-3-8b-instruct",
+            "model": "meta-llama/llama-4-maverick:free",
             "messages": messages
         }
 
