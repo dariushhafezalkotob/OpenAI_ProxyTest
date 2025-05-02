@@ -2,14 +2,11 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
-import openai
-
-# Load your API key
-client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+import requests
 
 app = FastAPI()
 
-# CORS setup
+# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,19 +16,27 @@ app.add_middleware(
 )
 
 @app.get("/")
-def read_root():
-    return {"message": "OpenAI proxy is running. Use POST /chat to interact."}
+def root():
+    return {"message": "OpenRouter proxy is live. POST to /chat with your messages."}
 
 @app.post("/chat")
 async def chat(request: Request):
-    data = await request.json()
-    messages = data.get("messages", [])
+    body = await request.json()
+    messages = body.get("messages", [])
 
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=messages
-        )
-        return JSONResponse(content=response.dict())
+        headers = {
+            "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "model": "maverick/llama-3-8b-instruct",
+            "messages": messages
+        }
+
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data)
+        return JSONResponse(content=response.json())
+
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
